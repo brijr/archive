@@ -1,4 +1,7 @@
 import { list } from "@vercel/blob";
+
+import Image from "next/image";
+
 import type { ListBlobResultBlob } from "@vercel/blob";
 
 export default async function Home() {
@@ -13,20 +16,17 @@ export default async function Home() {
 
   return (
     <div style={{ padding: "2rem" }}>
-      <h1 className="mb-8">Welcome to the 9d8 Archive</h1>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "1rem",
-        }}
-      >
+      <h1 className="mb-8">
+        Archive of <a href="https://bridger.to">Bridger</a>, a designer.
+      </h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
         {blobs.map((blob) => (
-          <img
+          <Image
             key={blob.url}
             src={blob.url}
             alt={blob.pathname}
             style={{ width: "100%", height: "auto" }}
+            placeholder="blur"
           />
         ))}
       </div>
