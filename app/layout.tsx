@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "9d8 Archive",
-  description: "Work created by 9d8",
+  title: "Archive of Bridger Tower",
+  description:
+    "Works created by Bridger Tower, a designer. Bridger is a designer, artist, and developer seeking to create beautiful things and master the craft of design.",
 };
 
 export default function RootLayout({
