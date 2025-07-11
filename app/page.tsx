@@ -1,3 +1,4 @@
+import { list } from "@vercel/blob";
 import Image from "next/image";
 import type { ListBlobResultBlob } from "@vercel/blob";
 
@@ -8,34 +9,15 @@ async function fetchAllBlobs(): Promise<ListBlobResultBlob[]> {
 
   while (hasMore) {
     try {
-      const url = new URL(
-        "/api/archive",
-        process.env.NEXT_PUBLIC_VERCEL_URL
-          ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-          : "http://localhost:3000"
-      );
+      const result = await list({
+        prefix: "archive/",
+        cursor: cursor || undefined,
+        limit: 50, // Match the API route limit
+      });
 
-      if (cursor) {
-        url.searchParams.set("cursor", cursor);
-      }
-
-      const response = await fetch(url.toString());
-
-      if (!response.ok) {
-        console.error("Failed to fetch blobs:", response.statusText);
-        break;
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.error("Error fetching blobs:", data.error);
-        break;
-      }
-
-      allBlobs.push(...data.blobs);
-      cursor = data.cursor;
-      hasMore = data.hasMore;
+      allBlobs.push(...result.blobs);
+      cursor = result.cursor;
+      hasMore = result.hasMore;
     } catch (error) {
       console.error("Error fetching blobs:", error);
       break;
