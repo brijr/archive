@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const result = await list({ prefix: "archive/" });
-    // Return array of blobs
-    return NextResponse.json(result.blobs);
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get("cursor");
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
+
+    const result = await list({
+      prefix: "archive/",
+      cursor: cursor || undefined,
+      limit: Math.min(limit, 100), // Cap at 100 to prevent abuse
+    });
+
+    return NextResponse.json({
+      blobs: result.blobs,
+      cursor: result.cursor,
+      hasMore: result.hasMore,
+    });
   } catch (error: Error | unknown) {
     console.error("Error listing blobs:", error);
     const errorMessage =

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
-  const correctPassword = process.env.U_PASSWORD;
+  const correctPassword = process.env.UPLOAD_PASSWORD;
 
   if (!correctPassword) {
     return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   if (password === correctPassword) {
     const res = NextResponse.json({ success: true });
-    res.cookies.set("u_auth", "1", {
+    res.cookies.set("upload_auth", "1", {
       httpOnly: true,
       path: "/",
       sameSite: "lax",

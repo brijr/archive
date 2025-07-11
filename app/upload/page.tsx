@@ -3,16 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Use env variable for password, fallback to 'letmein'
-const PASSWORD = process.env.NEXT_PUBLIC_U_PASSWORD || "letmein";
-const COOKIE_NAME = "u_auth";
-
-function setCookie(name: string, value: string, days: number) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )}; expires=${expires}; path=/`;
-}
+const COOKIE_NAME = "upload_auth";
 
 function getCookie(name: string) {
   return document.cookie.split("; ").reduce((r, v) => {
@@ -21,17 +12,19 @@ function getCookie(name: string) {
   }, "");
 }
 
-export default function ArchivePage() {
+export default function UploadPage() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
   const [pwError, setPwError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (getCookie(COOKIE_NAME) === PASSWORD) {
+    // Check if user is already authenticated
+    if (getCookie(COOKIE_NAME) === "1") {
       setAuthed(true);
     }
   }, []);
@@ -66,14 +59,33 @@ export default function ArchivePage() {
     }
   };
 
-  const handlePassword = (e: React.FormEvent) => {
+  const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === PASSWORD) {
-      setCookie(COOKIE_NAME, PASSWORD, 7);
-      setAuthed(true);
-      setPwError("");
-    } else {
-      setPwError("Incorrect password");
+    setAuthLoading(true);
+    setPwError("");
+
+    try {
+      const res = await fetch("/api/upload-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setAuthed(true);
+        setPassword("");
+      } else {
+        setPwError(data.error || "Incorrect password");
+      }
+    } catch (err) {
+      setPwError("Authentication failed");
+      console.error(err);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -88,8 +100,11 @@ export default function ArchivePage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
             style={{ marginRight: "1rem" }}
+            disabled={authLoading}
           />
-          <button type="submit">Enter</button>
+          <button type="submit" disabled={authLoading}>
+            {authLoading ? "Verifying..." : "Enter"}
+          </button>
         </form>
         {pwError && <p style={{ color: "red" }}>{pwError}</p>}
       </div>
